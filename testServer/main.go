@@ -1,39 +1,45 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
-	"log"
-	"net"
+	"math/rand"
+	"time"
 )
 
-type resultAndError struct {
-	Result string `json:"result,omitempty"`
-	Err    string `json:"error,omitempty"`
+func asChan(vs ...int) <-chan int {
+	c := make(chan int)
+
+	go func() {
+		for _, v := range vs {
+			c <- v
+			time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
+		}
+		close(c)
+	}()
+	return c
+}
+
+func merge(a, b <-chan int) <-chan int {
+	c := make(chan int)
+	go func() {
+		for {
+			select {
+			case v := <-a:
+				c <- v
+			case v := <-b:
+				c <- v
+			}
+		}
+	}()
+	return c
 }
 
 func main() {
-	r := new(resultAndError)
-	r.Result = "Falder"
-	fmt.Println()
 
-	json.NewDecoder()
-	con, err := net.Listen("tcp", ":5555")
-	if err != nil {
-		log.Fatal(err)
-	}
-	accept, err := con.Accept()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Connected")
-	bufReader := bufio.NewReader(accept)
-	for {
-		rb, err := bufReader.ReadByte()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Print(string(rb))
+	a := asChan(1, 3, 5, 7)
+	b := asChan(2, 4, 6, 8)
+	c := merge(a, b)
+	for v := range c {
+		fmt.Println(v)
 	}
 }

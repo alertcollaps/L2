@@ -79,6 +79,6 @@ func main() {
 	qiwi := NewQiwi(500)
 	master.setNext(qiwi)
 	fmt.Println("Current balance:", master.checkBalance())
-	master.pay(200, master)
+	master.pay(400, master)
 	fmt.Println("Balance now:", master.checkBalance())
 }
